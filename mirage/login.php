@@ -1,5 +1,39 @@
 <?php
 require_once 'includes/config.php';
+require_once 'includes/db.php';
+
+$error = '';
+$success = '';
+
+if (isset($_GET['registered']) && $_GET['registered'] == 1) {
+    $success = 'Registration successful! Please login with your credentials.';
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $remember = isset($_POST['remember']);
+
+    if (empty($email) || empty($password)) {
+        $error = 'Please enter both email and password';
+    } else {
+        $result = verify_login($email, $password);
+        if ($result['success']) {
+            $_SESSION['user'] = $result['user'];
+            if ($remember) {
+                // Set cookie for 30 days
+                setcookie('user_email', $email, time() + (86400 * 30), "/");
+            }
+            header('Location: dashboard.php');
+            exit;
+        } else {
+            $error = $result['message'];
+        }
+    }
+}
+
+// Check for remember me cookie
+$saved_email = $_COOKIE['user_email'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,6 +82,18 @@ require_once 'includes/config.php';
                     <i class="fas fa-user-circle text-5xl text-primary mb-4"></i>
                     <h2 class="text-2xl font-bold">Login to Your Account</h2>
                 </div>
+
+                <?php if ($error): ?>
+                <div class="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg">
+                    <p class="text-red-500 text-sm"><?php echo htmlspecialchars($error); ?></p>
+                </div>
+                <?php endif; ?>
+
+                <?php if ($success): ?>
+                <div class="mb-6 p-4 bg-green-500/10 border border-green-500/50 rounded-lg">
+                    <p class="text-green-500 text-sm"><?php echo htmlspecialchars($success); ?></p>
+                </div>
+                <?php endif; ?>
                 
                 <form action="login.php" method="post">
                     <div class="mb-6">
@@ -56,7 +102,10 @@ require_once 'includes/config.php';
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-envelope text-gray-500"></i>
                             </div>
-                            <input type="email" id="email" name="email" autocomplete="email" class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" placeholder="Enter your email" required>
+                            <input type="email" id="email" name="email" autocomplete="email" 
+                                   class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" 
+                                   placeholder="Enter your email" required
+                                   value="<?php echo htmlspecialchars($saved_email); ?>">
                         </div>
                     </div>
                     
@@ -66,13 +115,17 @@ require_once 'includes/config.php';
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-lock text-gray-500"></i>
                             </div>
-                            <input type="password" id="password" name="password" autocomplete="current-password" class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" placeholder="Enter your password" required>
+                            <input type="password" id="password" name="password" autocomplete="current-password" 
+                                   class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" 
+                                   placeholder="Enter your password" required>
                         </div>
                     </div>
                     
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center">
-                            <input type="checkbox" id="remember" name="remember" class="h-4 w-4 text-primary focus:ring-primary border-gray-600 rounded bg-dark-300">
+                            <input type="checkbox" id="remember" name="remember" 
+                                   class="h-4 w-4 text-primary focus:ring-primary border-gray-600 rounded bg-dark-300"
+                                   <?php echo $saved_email ? 'checked' : ''; ?>>
                             <label for="remember" class="ml-2 block text-sm text-gray-400">Remember me</label>
                         </div>
                         
