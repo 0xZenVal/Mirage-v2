@@ -1,5 +1,39 @@
 <?php
 require_once 'includes/config.php';
+require_once 'includes/db.php';
+
+$error = '';
+$success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
+    $terms = isset($_POST['terms']);
+
+    // Validate inputs
+    if (empty($name) || empty($email) || empty($password) || empty($confirm_password)) {
+        $error = 'All fields are required';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Invalid email format';
+    } elseif ($password !== $confirm_password) {
+        $error = 'Passwords do not match';
+    } elseif (strlen($password) < 6) {
+        $error = 'Password must be at least 6 characters long';
+    } elseif (!$terms) {
+        $error = 'You must agree to the Terms of Service';
+    } else {
+        // Try to create user
+        $result = create_user($name, $email, $password);
+        if ($result['success']) {
+            header('Location: login.php?registered=1');
+            exit;
+        } else {
+            $error = $result['message'];
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,6 +82,12 @@ require_once 'includes/config.php';
                     <i class="fas fa-user-plus text-5xl text-primary mb-4"></i>
                     <h2 class="text-2xl font-bold">Create Your Account</h2>
                 </div>
+
+                <?php if ($error): ?>
+                <div class="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg">
+                    <p class="text-red-500 text-sm"><?php echo htmlspecialchars($error); ?></p>
+                </div>
+                <?php endif; ?>
                 
                 <form action="register.php" method="post">
                     <div class="mb-6">
@@ -56,7 +96,10 @@ require_once 'includes/config.php';
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-user text-gray-500"></i>
                             </div>
-                            <input type="text" id="name" name="name" autocomplete="name" class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" placeholder="Enter your full name" required>
+                            <input type="text" id="name" name="name" autocomplete="name" 
+                                   class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" 
+                                   placeholder="Enter your full name" required 
+                                   value="<?php echo htmlspecialchars($name ?? ''); ?>">
                         </div>
                     </div>
 
@@ -66,7 +109,10 @@ require_once 'includes/config.php';
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-envelope text-gray-500"></i>
                             </div>
-                            <input type="email" id="email" name="email" autocomplete="email" class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" placeholder="Enter your email" required>
+                            <input type="email" id="email" name="email" autocomplete="email" 
+                                   class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" 
+                                   placeholder="Enter your email" required
+                                   value="<?php echo htmlspecialchars($email ?? ''); ?>">
                         </div>
                     </div>
                     
@@ -76,7 +122,9 @@ require_once 'includes/config.php';
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-lock text-gray-500"></i>
                             </div>
-                            <input type="password" id="password" name="password" autocomplete="new-password" class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" placeholder="Create a password" required>
+                            <input type="password" id="password" name="password" autocomplete="new-password" 
+                                   class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" 
+                                   placeholder="Create a password" required>
                         </div>
                     </div>
 
@@ -86,13 +134,16 @@ require_once 'includes/config.php';
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-lock text-gray-500"></i>
                             </div>
-                            <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" placeholder="Confirm your password" required>
+                            <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" 
+                                   class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" 
+                                   placeholder="Confirm your password" required>
                         </div>
                     </div>
                     
                     <div class="mb-6">
                         <div class="flex items-center">
-                            <input type="checkbox" id="terms" name="terms" class="h-4 w-4 text-primary focus:ring-primary border-gray-600 rounded bg-dark-300" required>
+                            <input type="checkbox" id="terms" name="terms" 
+                                   class="h-4 w-4 text-primary focus:ring-primary border-gray-600 rounded bg-dark-300" required>
                             <label for="terms" class="ml-2 block text-sm text-gray-400">
                                 I agree to the <a href="#" class="text-primary hover:text-blue-400">Terms of Service</a> and <a href="#" class="text-primary hover:text-blue-400">Privacy Policy</a>
                             </label>
