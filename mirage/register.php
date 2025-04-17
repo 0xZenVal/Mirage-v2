@@ -24,7 +24,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!$terms) {
         $error = 'You must agree to the Terms of Service';
     } else {
-        // Try to create user
+        // Include PHPMailer
+    require 'vendor/autoload.php';
+    use PHPMailer\PHPMailer\PHPMailer;
+    use PHPMailer\PHPMailer\Exception;
+
+    // Include PHPMailer
+    require 'vendor/autoload.php';
+    use PHPMailer\PHPMailer\PHPMailer;
+    use PHPMailer\PHPMailer\Exception;
+
+    // Try to create user
         $result = create_user($name, $email, $password);
         if ($result['success']) {
             header('Location: login.php?registered=1');
