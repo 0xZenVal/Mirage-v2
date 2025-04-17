@@ -31,20 +31,40 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Form validation
-const loginForm = document.querySelector('form');
+// Form validation - SPECIFIC TO LOGIN FORM ONLY
+const loginForm = document.querySelector('form[action*="login"]'); // More specific selector
 if (loginForm) {
     loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         
         if (!email || !password) {
+            e.preventDefault();
             alert('Please fill in all fields');
             return;
         }
         
-        // Add your form submission logic here
-        console.log('Form submitted:', { email, password });
+        // Form will submit normally if validation passes
+    });
+}
+
+// Add similar specific validation for registration form if needed
+const registerForm = document.querySelector('form[action*="register"]');
+if (registerForm) {
+    registerForm.addEventListener('submit', function(e) {
+        // Add any client-side validation you want here
+        // Don't preventDefault unless validation fails
+        
+        // Example validation:
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match');
+            return;
+        }
+        
+        // Form will submit normally if validation passes
     });
 }
