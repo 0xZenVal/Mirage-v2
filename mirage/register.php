@@ -1,9 +1,13 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 require_once 'includes/config.php';
 require_once 'includes/db.php';
 
 $error = '';
 $success = '';
+$name = '';
+$email = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
@@ -24,23 +28,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!$terms) {
         $error = 'You must agree to the Terms of Service';
     } else {
-        // Include PHPMailer
-    require 'vendor/autoload.php';
-    use PHPMailer\PHPMailer\PHPMailer;
-    use PHPMailer\PHPMailer\Exception;
-
-    // Include PHPMailer
-    require 'vendor/autoload.php';
-    use PHPMailer\PHPMailer\PHPMailer;
-    use PHPMailer\PHPMailer\Exception;
-
-    // Try to create user
+        // Try to create user
         $result = create_user($name, $email, $password);
         if ($result['success']) {
             header('Location: login.php?registered=1');
             exit;
         } else {
-            $error = $result['message'];
+            $error = $result['message'] ?? 'Email already exists. Please use a different email.';
         }
     }
 }
@@ -109,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="text" id="name" name="name" autocomplete="name" 
                                    class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" 
                                    placeholder="Enter your full name" required 
-                                   value="<?php echo htmlspecialchars($name ?? ''); ?>">
+                                   value="<?php echo htmlspecialchars($name); ?>">
                         </div>
                     </div>
 
@@ -122,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="email" id="email" name="email" autocomplete="email" 
                                    class="form-input pl-10 w-full py-2 px-3 bg-dark-300 border border-dark-100 rounded-lg focus:outline-none focus:border-primary" 
                                    placeholder="Enter your email" required
-                                   value="<?php echo htmlspecialchars($email ?? ''); ?>">
+                                   value="<?php echo htmlspecialchars($email); ?>">
                         </div>
                     </div>
                     
